@@ -27,6 +27,12 @@ public class RiksbankApiService {
     @Value("${riksbank.api.key}")
     private String apiKey;
 
+    /**
+     * Returns the latest Swedish bank day based on the current date and the Riksbankens publishing time.
+     * If the current time is before the publishing cutoff, it returns the previous day.
+     *
+     * @return the latest bank day as a LocalDate
+     */
     public LocalDate getLatestBankDay() {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
@@ -35,6 +41,14 @@ public class RiksbankApiService {
         return now.isBefore(cutoff) ? today.minusDays(1) : today;
     }
 
+    /**
+     * Fetches the latest cross rates between two currencies from Riksbankens API.
+     *
+     * @param fromCurrency the source currency
+     * @param toCurrency   the target currency
+     * @return a list of CrossRate objects containing the latest exchange rates
+     * @throws RiksbankApiException if no rates are returned from the API
+     */
     public List<CrossRate> getLatestCrossRates(Currency fromCurrency, Currency toCurrency) {
         HttpHeaders headers = createHeaders();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -49,7 +63,7 @@ public class RiksbankApiService {
         ResponseEntity<CrossRate[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, CrossRate[].class);
 
         if (response.getBody() == null || response.getBody().length == 0) {
-            throw new RiksbankApiException("No cross rates returned from Riksbank for " + fromCurrency + " to " + toCurrency);
+            throw new RiksbankApiException("No cross rates returned from Riksbanken for " + fromCurrency + " to " + toCurrency);
         }
 
         return List.of(response.getBody());
@@ -61,7 +75,7 @@ public class RiksbankApiService {
         ResponseEntity<CalendarDay[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, CalendarDay[].class);
 
         if (response.getBody() == null || response.getBody().length == 0) {
-            throw new RiksbankApiException("No bank days found in Riksbank API response");
+            throw new RiksbankApiException("No bank days found in Riksbankens API response");
         }
 
         return Arrays.stream(response.getBody())

@@ -23,7 +23,15 @@ public class ExchangeRateService {
     @Autowired
     private ExchangeRateRepository exchangeRateRepository;
 
+    /**
+     * Converts an amount from one currency to another using the latest exchange rate.
+     *
+     * @param request conversion request containing fromCurrency, toCurrency, and amount
+     * @return converted amount
+     * @throws IllegalArgumentException if no exchange rate is found
+     */
     public BigDecimal convertAmount(ConversionRequest request) {
+        // No conversion needed if source and target currency are the same
         if (request.getFromCurrency() == request.getToCurrency()) {
             return request.getAmount();
         }
@@ -34,6 +42,12 @@ public class ExchangeRateService {
         return rate.getConversionRate().multiply(request.getAmount());
     }
 
+    /**
+     * Updates and fetches all latest exchange rates for all currency combinations.
+     * Creates inverse rates for each fetched rate.
+     *
+     * @return list of exchange rates including inverse rates
+     */
     public List<ExchangeRate> updateAndFetchLatestExchangeRates() {
         List<ExchangeRate> allRates = new ArrayList<>();
 
@@ -52,6 +66,15 @@ public class ExchangeRateService {
         return allRates;
     }
 
+    /**
+     * Fetches an exchange rate for a specific currency pair and bank date.
+     * If the rate does not exist in the repository, it fetches from Riksbankens API and saves both rate and its inverse.
+     *
+     * @param fromCurrency source currency
+     * @param toCurrency target currency
+     * @param latestBankDate date for which the rate is fetched
+     * @return list containing the rate and its inverse
+     */
     public List<ExchangeRate> fetchOrCreateExchangeRateWithInverse(Currency fromCurrency, Currency toCurrency, LocalDate latestBankDate) {
         ExchangeRate exchangeRate = exchangeRateRepository.findByFromCurrencyAndToCurrencyAndRateDate(fromCurrency, toCurrency, latestBankDate)
                 .orElseGet(() -> createAndSaveExchangeRateAndInverseBasedOnRiksbankenApi(fromCurrency, toCurrency));
