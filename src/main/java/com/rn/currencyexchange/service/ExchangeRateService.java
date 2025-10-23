@@ -54,7 +54,7 @@ public class ExchangeRateService {
 
     public List<ExchangeRate> fetchOrCreateExchangeRateWithInverse(Currency fromCurrency, Currency toCurrency, LocalDate latestBankDate) {
         ExchangeRate exchangeRate = exchangeRateRepository.findByFromCurrencyAndToCurrencyAndRateDate(fromCurrency, toCurrency, latestBankDate)
-                .orElseGet(() -> createExchangeRateBasedOnRiksbankenApi(fromCurrency, toCurrency));
+                .orElseGet(() -> createAndSaveExchangeRateAndInverseBasedOnRiksbankenApi(fromCurrency, toCurrency));
 
         return List.of(exchangeRate, createInverseExchangeRate(exchangeRate));
     }
@@ -65,7 +65,7 @@ public class ExchangeRateService {
         return new ExchangeRate(exchangeRate.getToCurrency(), exchangeRate.getFromCurrency(), inverseRate, exchangeRate.getRateDate());
     }
 
-    private ExchangeRate createExchangeRateBasedOnRiksbankenApi(Currency fromCurrency, Currency toCurrency) {
+    private ExchangeRate createAndSaveExchangeRateAndInverseBasedOnRiksbankenApi(Currency fromCurrency, Currency toCurrency) {
         List<CrossRate> crossRates = riksbankApiService.getLatestCrossRates(fromCurrency, toCurrency);
 
         ExchangeRate rateFromApi = crossRates.stream()
