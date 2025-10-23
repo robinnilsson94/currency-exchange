@@ -73,7 +73,7 @@ mvn spring-boot:run
 ### Option 2: Using the JAR
 
 ```bash
-java -jar target/currency-exchange-service-0.0.1-SNAPSHOT.jar
+java -jar target/currency-exchange-0.0.1-SNAPSHOT.jar
 ```
 
 The application will start on port **8080** by default.
